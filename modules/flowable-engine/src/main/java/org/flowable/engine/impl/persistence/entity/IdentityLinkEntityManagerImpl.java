@@ -124,6 +124,7 @@ public class IdentityLinkEntityManagerImpl extends AbstractEntityManager<Identit
     taskEntity.getIdentityLinks().add(identityLinkEntity);
     identityLinkEntity.setTask(taskEntity);
     identityLinkEntity.setUserId(userId);
+    identityLinkEntity.setProcessInstanceId(taskEntity.getProcessInstanceId());
     identityLinkEntity.setGroupId(groupId);
     identityLinkEntity.setType(type);
     insert(identityLinkEntity);
