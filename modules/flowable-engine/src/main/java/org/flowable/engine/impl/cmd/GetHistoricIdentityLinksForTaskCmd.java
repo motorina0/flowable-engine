@@ -62,7 +62,7 @@ public class GetHistoricIdentityLinksForTaskCmd implements Command<List<Historic
 
     // Similar to GetIdentityLinksForTask, return assignee and owner as
     // identity link
-    if (task.getAssignee() != null) {
+/*    if (task.getAssignee() != null) {
       HistoricIdentityLinkEntity identityLink = commandContext.getHistoricIdentityLinkEntityManager().create();
       identityLink.setUserId(task.getAssignee());
       identityLink.setTaskId(task.getId());
@@ -75,7 +75,7 @@ public class GetHistoricIdentityLinksForTaskCmd implements Command<List<Historic
       identityLink.setUserId(task.getOwner());
       identityLink.setType(IdentityLinkType.OWNER);
       identityLinks.add(identityLink);
-    }
+    }*/
 
     return identityLinks;
   }
