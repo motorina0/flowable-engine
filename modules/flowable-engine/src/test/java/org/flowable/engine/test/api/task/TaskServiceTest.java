@@ -19,6 +19,7 @@ import static com.googlecode.catchexception.CatchException.caughtException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -1004,14 +1005,21 @@ public class TaskServiceTest extends PluggableFlowableTestCase {
     taskService.delegateTask(taskId, "fozzie");
 
     List<IdentityLink> identityLinks = taskService.getIdentityLinksForTask(taskId);
+    identityLinks.sort(new Comparator<IdentityLink>() {
+      @Override
+      public int compare(IdentityLink identityLink, IdentityLink identityLink2) {
+        return identityLink.getUserId().compareTo(identityLink2.getUserId());
+      }
+    });
+    
     assertEquals(2, identityLinks.size());
 
-    IdentityLink assignee = identityLinks.get(1);
+    IdentityLink assignee = identityLinks.get(0);
     assertEquals("fozzie", assignee.getUserId());
     assertNull(assignee.getGroupId());
     assertEquals(IdentityLinkType.ASSIGNEE, assignee.getType());
 
-    IdentityLink owner = identityLinks.get(0);
+    IdentityLink owner = identityLinks.get(1);
     assertEquals("kermit", owner.getUserId());
     assertNull(owner.getGroupId());
     assertEquals(IdentityLinkType.OWNER, owner.getType());
@@ -1032,12 +1040,12 @@ public class TaskServiceTest extends PluggableFlowableTestCase {
     List<IdentityLink> identityLinks = taskService.getIdentityLinksForTask(taskId);
     assertEquals(2, identityLinks.size());
 
-    IdentityLink assignee = identityLinks.get(0);
+    IdentityLink assignee = identityLinks.get(1);
     assertEquals("nonExistingAssignee", assignee.getUserId());
     assertNull(assignee.getGroupId());
     assertEquals(IdentityLinkType.ASSIGNEE, assignee.getType());
 
-    IdentityLink owner = identityLinks.get(1);
+    IdentityLink owner = identityLinks.get(0);
     assertEquals("nonExistingOwner", owner.getUserId());
     assertNull(owner.getGroupId());
     assertEquals(IdentityLinkType.OWNER, owner.getType());
