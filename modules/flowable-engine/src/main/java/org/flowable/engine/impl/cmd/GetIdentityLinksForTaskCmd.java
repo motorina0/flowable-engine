@@ -39,34 +39,6 @@ public class GetIdentityLinksForTaskCmd implements Command<List<IdentityLink>>, 
   public List<IdentityLink> execute(CommandContext commandContext) {
     TaskEntity task = commandContext.getTaskEntityManager().findById(taskId);
 
-    List<IdentityLink> identityLinks = (List) task.getIdentityLinks();
-
-    // assignee is not part of identity links in the db.
-    // so if there is one, we add it here.
-    // @Tom: we discussed this long on skype and you agreed ;-)
-    // an assignee *is* an identityLink, and so must it be reflected in the
-    // API
-    //
-    // Note: we cant move this code to the TaskEntity (which would be
-    // cleaner),
-    // since the task.delete cascaded to all associated identityLinks
-    // and of course this leads to exception while trying to delete a
-    // non-existing identityLink
-    if (task.getAssignee() != null) {
-      IdentityLinkEntity identityLink = commandContext.getIdentityLinkEntityManager().create(); 
-      identityLink.setUserId(task.getAssignee());
-      identityLink.setType(IdentityLinkType.ASSIGNEE);
-      identityLink.setTaskId(task.getId());
-      identityLinks.add(identityLink);
-    }
-    if (task.getOwner() != null) {
-      IdentityLinkEntity identityLink = commandContext.getIdentityLinkEntityManager().create(); 
-      identityLink.setUserId(task.getOwner());
-      identityLink.setTaskId(task.getId());
-      identityLink.setType(IdentityLinkType.OWNER);
-      identityLinks.add(identityLink);
-    }
-
     return (List) task.getIdentityLinks();
   }
 
