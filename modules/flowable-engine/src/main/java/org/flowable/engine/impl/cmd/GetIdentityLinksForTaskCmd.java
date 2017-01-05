@@ -17,10 +17,8 @@ import java.util.List;
 
 import org.flowable.engine.impl.interceptor.Command;
 import org.flowable.engine.impl.interceptor.CommandContext;
-import org.flowable.engine.impl.persistence.entity.IdentityLinkEntity;
 import org.flowable.engine.impl.persistence.entity.TaskEntity;
 import org.flowable.engine.task.IdentityLink;
-import org.flowable.engine.task.IdentityLinkType;
 
 /**
  * @author Joram Barrez
