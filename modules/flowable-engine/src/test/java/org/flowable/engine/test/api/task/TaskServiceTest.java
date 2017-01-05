@@ -1006,12 +1006,12 @@ public class TaskServiceTest extends PluggableFlowableTestCase {
     List<IdentityLink> identityLinks = taskService.getIdentityLinksForTask(taskId);
     assertEquals(2, identityLinks.size());
 
-    IdentityLink assignee = identityLinks.get(0);
+    IdentityLink assignee = identityLinks.get(1);
     assertEquals("fozzie", assignee.getUserId());
     assertNull(assignee.getGroupId());
     assertEquals(IdentityLinkType.ASSIGNEE, assignee.getType());
 
-    IdentityLink owner = identityLinks.get(1);
+    IdentityLink owner = identityLinks.get(0);
     assertEquals("kermit", owner.getUserId());
     assertNull(owner.getGroupId());
     assertEquals(IdentityLinkType.OWNER, owner.getType());
