@@ -57,7 +57,8 @@ public class TaskEntityManagerImpl extends AbstractEntityManager<TaskEntity> imp
   
   @Override
   public void insert(TaskEntity taskEntity, boolean fireCreateEvent) {
-
+    super.insert(taskEntity, fireCreateEvent);
+    
     if (taskEntity.getOwner() != null) {
       addOwnerIdentityLink(taskEntity, taskEntity.getOwner());
     }
@@ -65,7 +66,7 @@ public class TaskEntityManagerImpl extends AbstractEntityManager<TaskEntity> imp
       addAssigneeIdentityLinks(taskEntity);
     }
     
-    super.insert(taskEntity, fireCreateEvent);
+   
     
   }
   
@@ -111,12 +112,16 @@ public class TaskEntityManagerImpl extends AbstractEntityManager<TaskEntity> imp
   public void changeTaskAssignee(TaskEntity taskEntity, String assignee) {
     if ( (taskEntity.getAssignee() != null && !taskEntity.getAssignee().equals(assignee)) 
         || (taskEntity.getAssignee() == null && assignee != null)) {
+      String initialAsignee = taskEntity.getAssignee();
       taskEntity.setAssignee(assignee);
       fireAssignmentEvents(taskEntity);
       
       if (taskEntity.getId() != null) {
         getHistoryManager().recordTaskAssigneeChange(taskEntity.getId(), taskEntity.getAssignee());
-        addAssigneeIdentityLinks(taskEntity);
+        if (initialAsignee != null) {
+          getIdentityLinkEntityManager().deleteIdentityLink(taskEntity, initialAsignee, null, IdentityLinkType.ASSIGNEE);
+        }
+        addAssigneeIdentityLinks(taskEntity);        
         update(taskEntity);
       }
     }
@@ -126,10 +131,14 @@ public class TaskEntityManagerImpl extends AbstractEntityManager<TaskEntity> imp
   public void changeTaskOwner(TaskEntity taskEntity, String owner) {
     if ( (taskEntity.getOwner() != null && !taskEntity.getOwner().equals(owner)) 
         || (taskEntity.getOwner() == null && owner != null)) {
+      String initialOwner = taskEntity.getOwner();
       taskEntity.setOwner(owner);
       
       if (taskEntity.getId() != null) {
         getHistoryManager().recordTaskOwnerChange(taskEntity.getId(), taskEntity.getOwner());
+        if (initialOwner != null){
+          getIdentityLinkEntityManager().deleteIdentityLink(taskEntity, initialOwner, null, IdentityLinkType.OWNER);
+        }
         addOwnerIdentityLink(taskEntity, taskEntity.getOwner());
         update(taskEntity);
       }
@@ -148,8 +157,8 @@ public class TaskEntityManagerImpl extends AbstractEntityManager<TaskEntity> imp
   }
 
   private void addAssigneeIdentityLinks(TaskEntity taskEntity) {
-    if (taskEntity.getAssignee() != null && taskEntity.getProcessInstance() != null) {
-      getIdentityLinkEntityManager().involveUser(taskEntity.getProcessInstance(), taskEntity.getAssignee(), IdentityLinkType.PARTICIPANT);
+    if (taskEntity.getAssignee() != null) {
+      getIdentityLinkEntityManager().addIdentityLink(taskEntity, taskEntity.getAssignee(), null, IdentityLinkType.ASSIGNEE);
     }
   }
   
@@ -158,8 +167,8 @@ public class TaskEntityManagerImpl extends AbstractEntityManager<TaskEntity> imp
       return;
     }
     
-    if (owner != null && taskEntity.getProcessInstanceId() != null) {
-      getIdentityLinkEntityManager().involveUser(taskEntity.getProcessInstance(), owner, IdentityLinkType.PARTICIPANT);
+    if (owner != null) {
+      getIdentityLinkEntityManager().addIdentityLink(taskEntity, owner, null, IdentityLinkType.OWNER);
     }
   }
   
