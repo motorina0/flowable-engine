@@ -16,6 +16,7 @@ package org.flowable.engine.test.history;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -592,6 +593,79 @@ public class HistoricTaskInstanceTest extends PluggableFlowableTestCase {
     }
   }
 
+  @Deployment
+  public void testHistoricIdentityLinksOnTaskClaim() throws Exception {
+    ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("historicIdentityLinks");
+    Task task = taskService.createTaskQuery().processInstanceId(processInstance.getId()).singleResult();
+    assertNotNull(task);
+
+    //over a time period the task can be claimed by multiple users
+    //we must keep track of who claimed it 
+    String taskId = task.getId();
+    taskService.claim(taskId, "kermit");
+    taskService.unclaim(taskId);
+
+    taskService.claim(taskId, "fozzie");
+    taskService.unclaim(taskId);
+
+    taskService.claim(taskId, "gonzo");
+    taskService.unclaim(taskId);
+
+    //task is still active
+    List<HistoricIdentityLink> historicIdentityLinksForTask = historyService.getHistoricIdentityLinksForTask(task.getId());
+    historicIdentityLinksForTask.sort(createNewHistoryIdentityLinkComparator());
+    assertEquals(3, historicIdentityLinksForTask.size());
+    assertEquals("fozzie", historicIdentityLinksForTask.get(0).getUserId());
+    assertEquals("gonzo", historicIdentityLinksForTask.get(1).getUserId());
+    assertEquals("kermit", historicIdentityLinksForTask.get(2).getUserId());
+
+    List<HistoricIdentityLink> historicIdentityLinksForProcess = historyService.getHistoricIdentityLinksForProcessInstance(processInstance.getId());
+    assertEquals(3, historicIdentityLinksForProcess.size());
+    
+    // historic links should be present after the task is completed
+    taskService.complete(taskId);
+    historicIdentityLinksForTask = historyService.getHistoricIdentityLinksForTask(task.getId());
+    historicIdentityLinksForTask.sort(createNewHistoryIdentityLinkComparator());
+    assertEquals(3, historicIdentityLinksForTask.size());
+    assertEquals("fozzie", historicIdentityLinksForTask.get(0).getUserId());
+    assertEquals("gonzo", historicIdentityLinksForTask.get(1).getUserId());
+    assertEquals("kermit", historicIdentityLinksForTask.get(2).getUserId());
+    
+    historicIdentityLinksForProcess = historyService.getHistoricIdentityLinksForProcessInstance(processInstance.getId());
+    assertEquals(3, historicIdentityLinksForProcess.size());
+
+    Task secondTask = taskService.createTaskQuery().processInstanceId(processInstance.getId()).singleResult();
+    assertNotNull(secondTask);
+    
+    taskId = secondTask.getId();
+    taskService.claim(taskId, "newKid");
+    
+    //4 users now participated to the process
+    historicIdentityLinksForProcess = historyService.getHistoricIdentityLinksForProcessInstance(processInstance.getId());
+    assertEquals(4, historicIdentityLinksForProcess.size());
+    
+    //4 users participated after the last task (and the process) is completed
+    taskService.complete(taskId);
+    historicIdentityLinksForProcess = historyService.getHistoricIdentityLinksForProcessInstance(processInstance.getId());
+    assertEquals(4, historicIdentityLinksForProcess.size());
+  }
+
+  private Comparator<HistoricIdentityLink> createNewHistoryIdentityLinkComparator() {
+    return new Comparator<HistoricIdentityLink>() {
+
+      @Override
+      public int compare(HistoricIdentityLink o1, HistoricIdentityLink o2) {
+        if (o1 == null && o2 == null) {
+          return 0;
+        }
+        if (o1 == null) {
+          return -1;
+        }
+        return o1.getUserId().compareTo(o2.getUserId());
+      }
+    };
+  }
+  
   public void testInvalidSorting() {
     try {
       historyService.createHistoricTaskInstanceQuery().asc();
