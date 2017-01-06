@@ -211,7 +211,7 @@ public class IdentityLinkEntityManagerImpl extends AbstractEntityManager<Identit
     
     List<String> identityLinkIds = new ArrayList<String>();
     for (IdentityLinkEntity identityLink: identityLinks) {
-      deleteIdentityLink(identityLink, true);
+      deleteIdentityLink(identityLink, false);
       identityLinkIds.add(identityLink.getId());
     }
 
